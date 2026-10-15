@@ -1,0 +1,19 @@
+{
+  "name": "hebrew-word-duel-mvp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Real-time Hebrew word duel MVP",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check public/app.js",
+    "test": "node tests/smoke.cjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "ws": "^8.18.3"
+  }
+}

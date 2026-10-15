@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#120e2d" />
+    <title>המילה האחרונה — משחק מילים לשניים</title>
+    <meta name="description" content="משחק מילים מקוון לשני שחקנים בזמן אמת" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="brand">
+        <div class="brand-mark">א</div>
+        <div>
+          <h1>המילה האחרונה</h1>
+          <p>דו־קרב מילים בזמן אמת</p>
+        </div>
+      </header>
+
+      <section id="home" class="panel screen active">
+        <div class="hero-orbit" aria-hidden="true"><span>מ</span><span>ש</span><span>ח</span><span>ק</span></div>
+        <p class="eyebrow">ראש בראש · בלי חזרות · אות אחת בכל תור</p>
+        <h2>מי יגיד את<br /><em>המילה האחרונה?</em></h2>
+        <p class="lead">צרו חדר, שלחו קישור לחבר והמשחק מתחיל.</p>
+        <label class="field">
+          <span>השם שלך</span>
+          <input id="homeName" maxlength="18" autocomplete="nickname" placeholder="לדוגמה: תמר" />
+        </label>
+        <div id="joinArea" class="hidden">
+          <p class="invite-note">הוזמנת לחדר <strong id="inviteCode"></strong></p>
+          <button id="joinButton" class="button primary">הצטרפות למשחק</button>
+        </div>
+        <button id="createButton" class="button primary">יצירת משחק חדש</button>
+        <button id="rulesButton" class="button ghost">איך משחקים?</button>
+      </section>
+
+      <section id="lobby" class="panel screen">
+        <div class="section-head">
+          <div><span class="eyebrow">חדר משחק</span><h2 id="roomCode">—</h2></div>
+          <span id="connectionBadge" class="badge">מחובר</span>
+        </div>
+        <button id="shareButton" class="invite-box">
+          <span>הזמנת חבר</span>
+          <strong>העתקת קישור</strong>
+          <i>↗</i>
+        </button>
+        <div id="players" class="players"></div>
+        <div class="setting-card">
+          <div><span class="setting-icon">⏱</span><strong>זמן לכל תור</strong></div>
+          <div id="timerOptions" class="segmented">
+            <button data-time="15">15</button>
+            <button data-time="30" class="selected">30</button>
+            <button data-time="60">60</button>
+          </div>
+          <small id="timerHint">יוצר החדר בוחר, שני השחקנים מאשרים</small>
+        </div>
+        <div class="setting-card compact"><span class="setting-icon">🃏</span><strong>ג׳וקר אחד לכל שחקן</strong><small>פותר תור אחד במקומך</small></div>
+        <button id="readyButton" class="button primary" disabled>מחכים לשחקן נוסף...</button>
+      </section>
+
+      <section id="roulette" class="panel screen roulette-screen">
+        <p class="eyebrow">בחירת מילת פתיחה</p>
+        <h2>עצרו את הגלגל</h2>
+        <p>מי שעוצר — היריב מתחיל</p>
+        <div class="reel-window"><div id="reelWord" class="reel-word">מילה</div></div>
+        <button id="stopButton" class="stop-button" disabled><span>עצור</span></button>
+        <small id="rouletteStatus">הגלגל מתחיל...</small>
+      </section>
+
+      <section id="game" class="screen game-screen">
+        <div class="game-top">
+          <div id="gamePlayers" class="mini-players"></div>
+          <div id="turnTimer" class="turn-timer">30</div>
+        </div>
+        <div class="current-card">
+          <span id="turnLabel" class="eyebrow">התור שלך</span>
+          <div id="currentWord" class="current-word">—</div>
+          <p>הוסיפו, הסירו או החליפו אות אחת</p>
+        </div>
+        <form id="wordForm" class="word-form">
+          <input id="wordInput" dir="rtl" autocomplete="off" autocapitalize="off" placeholder="המילה שלך..." />
+          <button class="submit-word" aria-label="שליחת מילה">←</button>
+        </form>
+        <button id="jokerButton" class="joker-button"><span>🃏</span><strong>ג׳וקר</strong><small>המשחק פותר את התור</small></button>
+        <div class="history-card">
+          <div class="history-head"><strong>שרשרת המילים</strong><span id="moveCount">0 מהלכים</span></div>
+          <div id="history" class="history"></div>
+        </div>
+      </section>
+
+      <section id="finished" class="panel screen result-screen">
+        <div class="trophy">🏆</div>
+        <p class="eyebrow">המשחק הסתיים</p>
+        <h2 id="resultTitle">יש לנו מנצח!</h2>
+        <p id="resultReason"></p>
+        <button id="rematchButton" class="button primary">משחק נוסף</button>
+        <button id="homeButton" class="button ghost">חזרה למסך הראשי</button>
+      </section>
+    </main>
+
+    <div id="rulesModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <button class="modal-close" data-close="rulesModal">×</button>
+        <span class="eyebrow">החוקים</span>
+        <h2>פשוט להתחיל,<br />קשה לעצור</h2>
+        <ol>
+          <li><span>1</span><p><strong>משנים אות אחת</strong>מוסיפים, מסירים או מחליפים אות אחת בלבד.</p></li>
+          <li><span>2</span><p><strong>רק שם עצם ביחיד</strong>בלי שמות פרטיים ובלי מילים שכבר הופיעו.</p></li>
+          <li><span>3</span><p><strong>השעון רץ</strong>לא מצאתם מילה בזמן? היריב מנצח.</p></li>
+          <li><span>🃏</span><p><strong>ג׳וקר אחד</strong>פעם אחת במשחק אפשר לתת למערכת לפתור את התור.</p></li>
+        </ol>
+      </div>
+    </div>
+
+    <div id="appealModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card appeal-card">
+        <span class="eyebrow">המילון לא מכיר</span>
+        <h2 id="appealWord">—</h2>
+        <p id="appealText">האם זו מילה חוקית?</p>
+        <div class="appeal-actions">
+          <button id="rejectAppeal" class="button danger">פסילה</button>
+          <button id="approveAppeal" class="button primary">אישור</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
