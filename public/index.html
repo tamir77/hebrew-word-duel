@@ -19,6 +19,7 @@
           <h1>המילה האחרונה</h1>
           <p>דו־קרב מילים בזמן אמת</p>
         </div>
+        <button id="soundToggle" class="sound-toggle" type="button" aria-label="כיבוי צלילים" title="כיבוי צלילים">🔊</button>
       </header>
 
       <section id="home" class="panel screen active">
@@ -43,9 +44,17 @@
           <div><span class="eyebrow">חדר משחק</span><h2 id="roomCode">—</h2></div>
           <span id="connectionBadge" class="badge">מחובר</span>
         </div>
+        <div id="waitingCallout" class="waiting-callout" role="status" aria-live="polite">
+          <div class="waiting-signal" aria-hidden="true"><span></span><span></span><i>2</i></div>
+          <div>
+            <span class="waiting-kicker">הזמינו חבר למשחק</span>
+            <strong>מחכים לשחקן שני...</strong>
+            <small>שתפו את הקישור — המשחק יתחיל כששניכם תהיו מוכנים</small>
+          </div>
+        </div>
         <button id="shareButton" class="invite-box">
-          <span>הזמנת חבר</span>
-          <strong>העתקת קישור</strong>
+          <span>שלחו לחבר או לחברה</span>
+          <strong>שיתוף קישור ההזמנה</strong>
           <i>↗</i>
         </button>
         <div id="players" class="players"></div>
@@ -63,12 +72,19 @@
       </section>
 
       <section id="roulette" class="panel screen roulette-screen">
-        <p class="eyebrow">בחירת מילת פתיחה</p>
-        <h2>עצרו את הגלגל</h2>
-        <p>מי שעוצר — היריב מתחיל</p>
-        <div class="reel-window"><div id="reelWord" class="reel-word">מילה</div></div>
-        <button id="stopButton" class="stop-button" disabled><span>עצור</span></button>
-        <small id="rouletteStatus">הגלגל מתחיל...</small>
+        <p class="eyebrow">מכונת המילים</p>
+        <h2>המזל בוחר</h2>
+        <p>המכונה בוחרת מילה ומגרילה מי מתחיל</p>
+        <div class="slot-machine" aria-live="polite">
+          <div class="slot-lights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="reel-window">
+            <div id="reelBefore" class="reel-side">—</div>
+            <div id="reelWord" class="reel-word">מילה</div>
+            <div id="reelAfter" class="reel-side">—</div>
+          </div>
+        </div>
+        <div class="automatic-draw"><span></span><strong>עצירה אוטומטית</strong></div>
+        <small id="rouletteStatus">המכונה מתחממת...</small>
       </section>
 
       <section id="game" class="screen game-screen">
@@ -110,7 +126,8 @@
         <ol>
           <li><span>1</span><p><strong>משנים אות אחת</strong>מוסיפים, מסירים או מחליפים אות אחת בלבד.</p></li>
           <li><span>2</span><p><strong>רק שם עצם ביחיד</strong>בלי שמות פרטיים ובלי מילים שכבר הופיעו.</p></li>
-          <li><span>3</span><p><strong>השעון רץ</strong>לא מצאתם מילה בזמן? היריב מנצח.</p></li>
+          <li><span>3</span><p><strong>המכונה בוחרת</strong>הרולטה עוצרת לבד ומגרילה מי מתחיל.</p></li>
+          <li><span>4</span><p><strong>השעון רץ</strong>לא מצאתם מילה בזמן? היריב מנצח.</p></li>
           <li><span>🃏</span><p><strong>ג׳וקר אחד</strong>פעם אחת במשחק אפשר לתת למערכת לפתור את התור.</p></li>
         </ol>
       </div>

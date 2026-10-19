@@ -7,10 +7,11 @@
   "scripts": {
     "start": "node server.js",
     "check": "node --check server.js && node --check public/app.js",
-    "test": "node tests/smoke.cjs"
+    "test": "node tests/smoke.cjs",
+    "dictionary:import": "node scripts/import-hspell.cjs"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13"
   },
   "dependencies": {
     "express": "^5.1.0",

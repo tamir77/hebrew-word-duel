@@ -3,6 +3,7 @@ const http = require('http');
 const path = require('path');
 const crypto = require('crypto');
 const { WebSocketServer, WebSocket } = require('ws');
+const { loadDictionary } = require('./lib/dictionary.cjs');
 
 const app = express();
 const server = http.createServer(app);
@@ -10,29 +11,23 @@ const wss = new WebSocketServer({ server, path: '/ws' });
 const PORT = Number(process.env.PORT || 3000);
 
 app.use(express.static(path.join(__dirname, 'public')));
-app.get('/health', (_req, res) => res.status(200).json({ ok: true }));
+app.get('/health', (_req, res) => res.status(200).json({
+  ok: true,
+  dictionaryVersion: loadedDictionary.metadata.dictionary_version,
+  dictionarySpellings: Number(loadedDictionary.metadata.imported_spellings),
+  dictionaryKeys: dictionary.size
+}));
 app.get('/{*splat}', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-// A deliberately small MVP dictionary. Production will replace this with a
-// reviewed list of Hebrew common nouns in singular form.
-const WORDS = [
-  'אור','אוזן','אוצר','אוכל','אולם','אופק','אושר','אוויר','אויב','איש','ארון','אריה','ארץ','אש','אשכול',
-  'בגד','בובה','בוץ','בור','בית','ביצה','בירה','ברז','ברק','בשר','גג','גוף','גול','גשר','גן','גזר','גל','גלגל',
-  'דג','דגל','דלי','דלת','דם','דף','דקה','דוב','דור','דרך','הר','הרגל','זהב','זאב','זנב','זמן','זר','חבל',
-  'חדר','חול','חום','חוף','חוט','חוק','חור','חלון','חלום','חלב','חץ','חתול','יד','ידע','יין','ים','יער','כדור',
-  'כובע','כוכב','כוס','כיס','כיסא','כפר','כור','כביש','כלב','כתב','כתר','לחם','לוח','לב','לילה','לשון','מגדל',
-  'מדף','מזל','מטבע','מיטה','מים','מכונה','מכולה','מכללה','מכתב','מלך','מסך','מסר','מעיל','מפתח','מרק','משחק',
-  'נבואה','נחל','נמר','נר','נשר','סוס','סיר','סלע','ספר','עור','עין','עיר','עץ','ענן','עוף','עכבר','פה','פח','פיל',
-  'פנס','פרח','צבע','צד','ציד','ציוד','ציר','צל','צלחת','צמר','צור','קיר','קול','קור','קרח','קרן','ראש','רגל',
-  'רוח','רחוב','רכב','שולחן','שור','שוק','שיר','שמש','שעון','שער','תוף','תור','תיק','תמונה','תפוח','תכונה',
-  'תבונה','תבואה','מבואה','מבוכה','שכונה','מפה','קפה','יפה','שפה','ספה','קופה','תקופה','טיפה','כיפה','קליפה',
-  'חיה','חידה','יחידה','ילד','ילדה','לידה','מידה','עבודה','עובד','עולם','סולם','שלום','חלום','אלום','מקום',
-  'מקל','משקל','שקל','שק','שקית','קשית','כרית','ברית','בית','זית','חיל','חול','קול','כלי','דלי','טלי','טיל',
-  'שביל','תבשיל','בישול','חישול','גידול','טיפול','טיול','ציור','סיפור','ציפור','כדור','כפור','תנור','צינור'
-];
-
 const FINAL_MAP = { 'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ' };
-const dictionary = new Set(WORDS.map(normalize));
+const HEBREW_LETTERS = [...'אבגדהוזחטיכלמנסעפצקרשת'];
+const loadedDictionary = loadDictionary();
+const wordByKey = new Map();
+for (const entry of loadedDictionary.entries) {
+  if (!wordByKey.has(entry.normalized)) wordByKey.set(entry.normalized, entry.lemma);
+}
+const WORDS = [...wordByKey.values()];
+const dictionary = new Set(wordByKey.keys());
 const rooms = new Map();
 
 function normalize(value = '') {
@@ -73,10 +68,24 @@ function oneEditApart(aRaw, bRaw) {
 }
 
 function neighbors(word, used = new Set()) {
-  return WORDS.filter((candidate) => {
-    const key = normalize(candidate);
-    return !used.has(key) && key !== normalize(word) && oneEditApart(word, candidate);
-  });
+  const source = normalize(word);
+  const keys = new Set();
+  const add = (candidate) => {
+    if (candidate !== source && dictionary.has(candidate) && !used.has(candidate)) keys.add(candidate);
+  };
+
+  for (let index = 0; index < source.length; index += 1) {
+    add(source.slice(0, index) + source.slice(index + 1));
+    for (const letter of HEBREW_LETTERS) {
+      if (letter !== source[index]) add(source.slice(0, index) + letter + source.slice(index + 1));
+    }
+  }
+
+  for (let index = 0; index <= source.length; index += 1) {
+    for (const letter of HEBREW_LETTERS) add(source.slice(0, index) + letter + source.slice(index));
+  }
+
+  return [...keys].map((key) => wordByKey.get(key));
 }
 
 const starterPool = WORDS.filter((word) => neighbors(word).length >= 3);
@@ -110,7 +119,10 @@ function publicRoom(room) {
     roulette: room.roulette ? {
       words: room.roulette.words,
       startedAt: room.roulette.startedAt,
-      stoppedBy: room.roulette.stoppedBy
+      settlesAt: room.roulette.settlesAt,
+      resolvesAt: room.roulette.resolvesAt,
+      selectedIndex: room.roulette.selectedIndex,
+      settled: room.roulette.settled
     } : null,
     currentWord: room.currentWord,
     activePlayer: room.activePlayer,
@@ -144,6 +156,11 @@ function clearTurnTimer(room) {
   room.turnTimer = null;
 }
 
+function clearRouletteTimer(room) {
+  if (room.rouletteTimer) clearTimeout(room.rouletteTimer);
+  room.rouletteTimer = null;
+}
+
 function startTurn(room, playerIndex) {
   clearTurnTimer(room);
   room.activePlayer = playerIndex;
@@ -164,6 +181,7 @@ function finish(room, winner, reason) {
 
 function resetRound(room) {
   clearTurnTimer(room);
+  clearRouletteTimer(room);
   room.phase = 'lobby';
   room.players.forEach((player) => {
     if (player) {
@@ -185,9 +203,33 @@ function resetRound(room) {
 function beginRoulette(room) {
   const pool = starterPool.length >= 12 ? starterPool : WORDS.filter((word) => neighbors(word).length);
   const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, Math.min(24, pool.length));
+  const startedAt = Date.now() + 550;
+  const settlesAt = startedAt + 3600;
   room.phase = 'roulette';
-  room.roulette = { words: shuffled, startedAt: Date.now() + 600, stoppedBy: null };
+  room.roulette = {
+    words: shuffled,
+    startedAt,
+    settlesAt,
+    resolvesAt: settlesAt + 900,
+    selectedIndex: crypto.randomInt(shuffled.length),
+    firstPlayer: crypto.randomInt(2),
+    settled: false
+  };
   broadcast(room);
+  room.rouletteTimer = setTimeout(() => {
+    if (room.phase !== 'roulette' || !room.roulette) return;
+    room.roulette.settled = true;
+    broadcast(room);
+    room.rouletteTimer = setTimeout(() => {
+      if (room.phase !== 'roulette' || !room.roulette) return;
+      room.rouletteTimer = null;
+      room.currentWord = room.roulette.words[room.roulette.selectedIndex];
+      room.history = [{ word: room.currentWord, player: null, at: Date.now() }];
+      const firstPlayer = room.roulette.firstPlayer;
+      room.phase = 'playing';
+      startTurn(room, firstPlayer);
+    }, Math.max(0, room.roulette.resolvesAt - Date.now()));
+  }, Math.max(0, settlesAt - Date.now()));
 }
 
 function submitAcceptedWord(room, playerIndex, word) {
@@ -226,6 +268,7 @@ function handleMessage(ws, message) {
       winner: null,
       reason: null,
       turnTimer: null,
+      rouletteTimer: null,
       createdAt: Date.now()
     };
     rooms.set(roomCode, room);
@@ -280,18 +323,6 @@ function handleMessage(ws, message) {
     player.ready = Boolean(data.ready);
     if (room.players.every((p) => p && p.ready)) beginRoulette(room);
     else broadcast(room);
-    return;
-  }
-
-  if (data.type === 'stop_roulette') {
-    if (room.phase !== 'roulette' || room.roulette.stoppedBy !== null) return;
-    const elapsed = Math.max(0, Date.now() - room.roulette.startedAt);
-    const index = Math.floor(elapsed / 110) % room.roulette.words.length;
-    room.roulette.stoppedBy = me;
-    room.currentWord = room.roulette.words[index];
-    room.history = [{ word: room.currentWord, player: null, at: Date.now() }];
-    room.phase = 'playing';
-    startTurn(room, 1 - me);
     return;
   }
 
@@ -352,6 +383,7 @@ setInterval(() => {
     const connected = room.players.some((player) => player && player.ws && player.ws.readyState === WebSocket.OPEN);
     if (!connected && room.createdAt < cutoff) {
       clearTurnTimer(room);
+      clearRouletteTimer(room);
       rooms.delete(roomCode);
     }
   }
@@ -363,4 +395,13 @@ if (require.main === module) {
   });
 }
 
-module.exports = { normalize, oneEditApart, neighbors };
+module.exports = {
+  normalize,
+  oneEditApart,
+  neighbors,
+  dictionaryStats: {
+    spellings: Number(loadedDictionary.metadata.imported_spellings),
+    keys: dictionary.size,
+    version: loadedDictionary.metadata.dictionary_version
+  }
+};
