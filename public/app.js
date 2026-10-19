@@ -2,7 +2,7 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
 const elements = {
-  homeName: $('#homeName'), createButton: $('#createButton'), joinButton: $('#joinButton'), joinArea: $('#joinArea'),
+  homeName: $('#homeName'), createButton: $('#createButton'), joinButton: $('#joinButton'), joinArea: $('#joinArea'), expiredRoom: $('#expiredRoom'),
   inviteCode: $('#inviteCode'), rulesButton: $('#rulesButton'), rulesModal: $('#rulesModal'), lobby: $('#lobby'), roomCode: $('#roomCode'),
   shareButton: $('#shareButton'), players: $('#players'), timerOptions: $('#timerOptions'), readyButton: $('#readyButton'),
   waitingCallout: $('#waitingCallout'), soundToggle: $('#soundToggle'),
@@ -99,6 +99,19 @@ function playerKey(code) { return `last-word:${code}`; }
 function getName() { return elements.homeName.value.trim() || localStorage.getItem('last-word:name') || ''; }
 function setName() { if (getName()) localStorage.setItem('last-word:name', getName()); }
 
+function showExpiredRoom() {
+  pendingAction = null;
+  roomState = null;
+  myIndex = null;
+  myId = null;
+  if (invitedRoom) localStorage.removeItem(playerKey(invitedRoom));
+  history.replaceState({}, '', location.pathname);
+  elements.joinArea.classList.add('hidden');
+  elements.expiredRoom.classList.remove('hidden');
+  elements.createButton.classList.remove('hidden');
+  showScreen('home');
+}
+
 function connect(action) {
   pendingAction = action;
   clearTimeout(reconnectTimer);
@@ -112,7 +125,10 @@ function connect(action) {
   });
   socket.addEventListener('message', ({ data }) => {
     const message = JSON.parse(data);
-    if (message.type === 'error') return toast(message.message);
+    if (message.type === 'error') {
+      if (message.code === 'ROOM_NOT_FOUND') return showExpiredRoom();
+      return toast(message.message);
+    }
     if (message.type === 'joined') {
       myIndex = message.playerIndex;
       myId = message.playerId;

@@ -27,6 +27,7 @@ async function peer(){
     for(const [a,b,v] of [['כיסא','כיס',true],['כיס','כוס',true],['כיס','כיסא',true],['מלך','מלכה',true],['חלון','חלום',true],['כור','קור',true],['רוח','חור',false],['כיס','כיס',false],['ספר','ספרים',false]])assert.equal(oneEditApart(a,b),v,`${a}/${b}`);
     assert.equal(normalize('מֶלֶךְ'),'מלכ');ok('9 edit cases and niqqud/final-letter normalization');
     const a=await peer(),b=await peer(),c=await peer();
+    c.send({type:'join_room',name:'אורח',roomCode:'ZZZZZ'});const missing=await c.next(m=>m.type==='error');assert.equal(missing.code,'ROOM_NOT_FOUND');ok('Expired room links return a dedicated error code');
     a.send({type:'create_room',name:'אמילי',timerSeconds:30});
     const joinedA=await a.next(m=>m.type==='joined');const code=joinedA.state.code;
     b.send({type:'join_room',name:'אדל',roomCode:code});

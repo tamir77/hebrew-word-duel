@@ -35,6 +35,14 @@
           <p class="invite-note">הוזמנת לחדר <strong id="inviteCode"></strong></p>
           <button id="joinButton" class="button primary">הצטרפות למשחק</button>
         </div>
+        <div id="expiredRoom" class="expired-room hidden" role="alert" aria-live="assertive">
+          <div class="expired-room-icon" aria-hidden="true">⌛</div>
+          <div>
+            <span>הקישור כבר לא פעיל</span>
+            <strong>החדר הזה כבר לא קיים</strong>
+            <small>כנראה שהמשחק הסתיים. אפשר לפתוח חדר חדש ולהזמין שוב.</small>
+          </div>
+        </div>
         <button id="createButton" class="button primary">יצירת משחק חדש</button>
         <button id="rulesButton" class="button ghost">איך משחקים?</button>
       </section>

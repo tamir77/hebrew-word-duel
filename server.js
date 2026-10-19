@@ -147,8 +147,8 @@ function broadcast(room, type = 'state') {
   room.players.forEach((player) => player && send(player.ws, { type, state }));
 }
 
-function error(ws, message) {
-  send(ws, { type: 'error', message });
+function error(ws, message, code = undefined) {
+  send(ws, { type: 'error', message, ...(code ? { code } : {}) });
 }
 
 function clearTurnTimer(room) {
@@ -282,7 +282,7 @@ function handleMessage(ws, message) {
   if (data.type === 'join_room') {
     const roomCode = String(data.roomCode || '').toUpperCase();
     const room = rooms.get(roomCode);
-    if (!room) return error(ws, 'החדר לא נמצא');
+    if (!room) return error(ws, 'החדר הזה כבר לא קיים', 'ROOM_NOT_FOUND');
     const reconnectIndex = room.players.findIndex((player) => player && player.id === data.playerId);
     let playerIndex = reconnectIndex;
     let playerId = data.playerId;

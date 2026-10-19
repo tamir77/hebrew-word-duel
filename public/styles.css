@@ -60,6 +60,12 @@ input:focus { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(255, 200, 87
 .button.danger { background: rgba(255,78,136,.15); color: #ff88ae; border: 1px solid rgba(255,78,136,.26); }
 .hidden { display: none !important; }
 .invite-note { margin: 12px 0 2px; color: var(--muted); text-align: center; }
+.expired-room { display: grid; grid-template-columns: 54px 1fr; align-items: center; gap: 14px; margin: 20px 0 12px; padding: 16px; text-align: right; border: 1px solid rgba(255,200,87,.32); border-radius: 20px; background: linear-gradient(135deg, rgba(255,200,87,.12), rgba(255,78,136,.08)); box-shadow: inset 0 1px rgba(255,255,255,.05); }
+.expired-room-icon { width: 50px; height: 50px; display: grid; place-items: center; border-radius: 16px; color: #241438; background: linear-gradient(145deg, var(--gold), #ff9f43); font-size: 25px; box-shadow: 0 8px 22px rgba(255,200,87,.2); }
+.expired-room span, .expired-room strong, .expired-room small { display: block; }
+.expired-room span { margin-bottom: 2px; color: var(--gold); font-size: 12px; font-weight: 800; }
+.expired-room strong { font-size: 20px; line-height: 1.2; }
+.expired-room small { margin-top: 5px; color: var(--muted); line-height: 1.35; }
 .section-head { display: flex; align-items: center; justify-content: space-between; }
 .section-head h2 { font-size: 38px; letter-spacing: .08em; }
 .badge { padding: 6px 10px; color: var(--green); background: rgba(66,214,164,.1); border: 1px solid rgba(66,214,164,.2); border-radius: 20px; font-size: 12px; font-weight: 800; }
